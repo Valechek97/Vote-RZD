@@ -19,9 +19,10 @@
             background: #ffffff;
             color: #000000;
             min-height: 100vh;
-            padding: 24px 36px 32px;
+            padding: 18px 24px 20px;
             display: flex;
             flex-direction: column;
+            overflow: hidden;
         }
 
         header {
@@ -29,87 +30,86 @@
             justify-content: space-between;
             align-items: flex-end;
             border-bottom: 4px solid var(--rjd-red);
-            padding-bottom: 14px;
-            margin-bottom: 24px;
+            padding-bottom: 10px;
+            margin-bottom: 14px;
+            flex-shrink: 0;
         }
         h1 {
-            font-size: 34px;
+            font-size: 30px;
             font-weight: 800;
             color: var(--rjd-red);
             letter-spacing: 0.4px;
             line-height: 1.1;
         }
         .subtitle {
-            font-size: 17px;
+            font-size: 15px;
             color: var(--rjd-dark);
             font-weight: 500;
-            margin-top: 4px;
+            margin-top: 3px;
         }
         .total-badge {
-            font-size: 18px;
+            font-size: 17px;
             color: var(--rjd-dark);
             font-weight: 600;
             background: var(--rjd-light);
-            padding: 8px 18px;
-            border-radius: 24px;
+            padding: 7px 16px;
+            border-radius: 22px;
             white-space: nowrap;
         }
         .test-banner {
             background: #fff0f1;
             border: 2px dashed var(--rjd-red);
-            border-radius: 10px;
-            padding: 10px 16px;
-            font-size: 14px;
+            border-radius: 8px;
+            padding: 6px 14px;
+            font-size: 12px;
             color: var(--rjd-red);
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 12px;
             font-weight: 600;
+            flex-shrink: 0;
         }
 
+        /* ===== Победитель ===== */
         .winner-block {
             display: flex;
             align-items: center;
-            gap: 28px;
+            gap: 20px;
             background: linear-gradient(135deg, #fff5f5 0%, #ffe8ea 100%);
             border: 3px solid var(--rjd-red);
-            border-radius: 20px;
-            padding: 24px 32px;
-            margin-bottom: 28px;
-            box-shadow: 0 8px 24px rgba(205, 32, 44, 0.15);
-            animation: winnerPulse 2.5s ease-in-out infinite;
-        }
-        @keyframes winnerPulse {
-            0%, 100% { box-shadow: 0 8px 24px rgba(205, 32, 44, 0.15); }
-            50%      { box-shadow: 0 8px 36px rgba(205, 32, 44, 0.35); }
+            border-radius: 16px;
+            padding: 16px 26px;
+            margin-bottom: 16px;
+            box-shadow: 0 6px 20px rgba(205, 32, 44, 0.15);
+            flex-shrink: 0;
         }
         .cup {
-            font-size: 72px;
+            font-size: 54px;
             line-height: 1;
             filter: drop-shadow(0 4px 8px rgba(205, 32, 44, 0.3));
         }
         .winner-info { flex: 1; }
         .winner-label {
-            font-size: 15px;
+            font-size: 13px;
             text-transform: uppercase;
             letter-spacing: 2px;
             color: var(--rjd-red);
             font-weight: 700;
-            margin-bottom: 4px;
+            margin-bottom: 2px;
         }
         .winner-code {
-            font-size: 56px;
+            font-size: 44px;
             font-weight: 900;
             color: var(--rjd-red);
             line-height: 1;
-            margin-bottom: 8px;
+            margin-bottom: 4px;
         }
         .winner-stats {
-            font-size: 20px;
+            font-size: 17px;
             color: var(--rjd-dark);
             font-weight: 600;
         }
         .winner-percent {
-            font-size: 44px;
+            font-size: 36px;
             font-weight: 900;
             color: var(--rjd-red);
             margin-left: auto;
@@ -117,27 +117,30 @@
         }
         .winner-percent small {
             display: block;
-            font-size: 15px;
+            font-size: 13px;
             font-weight: 600;
             color: var(--rjd-dark);
             letter-spacing: 0.5px;
         }
 
+        /* ===== Рейтинг в 3 колонки ===== */
         .ranking {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px 18px;
             flex: 1;
+            align-content: start;
         }
         .rank-row {
             display: grid;
-            grid-template-columns: 56px 110px 1fr 170px;
+            grid-template-columns: 34px 62px 1fr 78px;
             align-items: center;
-            gap: 18px;
-            padding: 12px 18px;
+            gap: 8px;
+            padding: 7px 10px;
             background: var(--rjd-light);
-            border-radius: 12px;
-            border-left: 6px solid var(--rjd-gray);
+            border-radius: 8px;
+            border-left: 5px solid var(--rjd-gray);
+            min-height: 40px;
         }
         .rank-row.top3 {
             border-left-color: var(--rjd-red);
@@ -146,30 +149,30 @@
         .rank-row.winner-row {
             border-left-color: var(--rjd-red);
             background: #ffe3e6;
-            font-weight: 700;
         }
         .rank-num {
-            font-size: 26px;
+            font-size: 18px;
             font-weight: 900;
             color: var(--rjd-gray);
             text-align: center;
         }
         .top3 .rank-num { color: var(--rjd-red); }
         .rank-code {
-            font-size: 22px;
+            font-size: 15px;
             font-weight: 800;
             color: #000;
+            white-space: nowrap;
         }
         .winner-row .rank-code { color: var(--rjd-red); }
         .rank-bar-wrap {
-            height: 22px;
+            height: 14px;
             background: #e0e0e0;
-            border-radius: 11px;
+            border-radius: 7px;
             overflow: hidden;
         }
         .rank-bar {
             height: 100%;
-            border-radius: 11px;
+            border-radius: 7px;
             background: var(--rjd-dark);
             transition: width 1s cubic-bezier(0.22, 1, 0.36, 1);
             width: 0%;
@@ -177,20 +180,18 @@
         .top3 .rank-bar { background: var(--rjd-red); }
         .rank-values {
             display: flex;
-            justify-content: space-between;
-            align-items: baseline;
-            gap: 12px;
-            font-size: 16px;
-            color: var(--rjd-dark);
+            flex-direction: column;
+            align-items: flex-end;
+            line-height: 1.1;
         }
         .rank-percent {
-            font-size: 22px;
+            font-size: 15px;
             font-weight: 800;
             color: #000;
         }
         .top3 .rank-percent { color: var(--rjd-red); }
         .rank-count {
-            font-size: 14px;
+            font-size: 10px;
             color: #707070;
             font-weight: 500;
             white-space: nowrap;
@@ -198,7 +199,7 @@
 
         #loading {
             text-align: center;
-            font-size: 22px;
+            font-size: 20px;
             color: #909090;
             padding: 60px 0;
         }
@@ -206,10 +207,10 @@
             background: #fff0f1;
             border: 2px solid var(--rjd-red);
             border-radius: 12px;
-            padding: 24px;
+            padding: 20px;
             color: var(--rjd-red);
-            font-size: 16px;
-            margin-top: 20px;
+            font-size: 15px;
+            margin-top: 16px;
         }
         .error-box code {
             background: #ffe3e6;
@@ -218,26 +219,37 @@
             font-family: monospace;
         }
         .refresh-hint {
-            margin-top: 16px;
-            font-size: 13px;
+            margin-top: 10px;
+            font-size: 12px;
             color: #909090;
             text-align: center;
+            flex-shrink: 0;
         }
 
+        /* Подгонка под небольшие экраны (планшеты, ноутбуки) */
         @media (max-width: 1100px) {
-            body { padding: 16px; }
-            h1 { font-size: 26px; }
-            .winner-block { flex-wrap: wrap; gap: 16px; }
-            .cup { font-size: 54px; }
-            .winner-code { font-size: 40px; }
-            .winner-percent { font-size: 32px; margin-left: 0; text-align: left; }
+            body { padding: 12px; }
+            h1 { font-size: 24px; }
+            .cup { font-size: 42px; }
+            .winner-code { font-size: 34px; }
+            .winner-percent { font-size: 28px; }
             .rank-row {
-                grid-template-columns: 40px 80px 1fr 130px;
-                gap: 10px;
-                padding: 10px 12px;
+                grid-template-columns: 28px 54px 1fr 66px;
+                padding: 6px 8px;
+                min-height: 36px;
             }
-            .rank-code { font-size: 18px; }
-            .rank-percent { font-size: 18px; }
+            .rank-num { font-size: 15px; }
+            .rank-code { font-size: 13px; }
+            .rank-percent { font-size: 13px; }
+            .rank-count { font-size: 9px; }
+        }
+
+        /* Узкие экраны: 2 колонки */
+        @media (max-width: 760px) {
+            body { overflow: auto; }
+            .ranking { grid-template-columns: repeat(2, 1fr); }
+            .winner-block { flex-wrap: wrap; gap: 12px; }
+            .winner-percent { margin-left: 0; text-align: left; }
         }
     </style>
 </head>
@@ -254,7 +266,7 @@
     </header>
 
     <div id="loading">Загрузка результатов…</div>
-    <div id="content" style="display:none; flex-direction:column; flex:1;"></div>
+    <div id="content" style="display:none; flex-direction:column; flex:1; min-height:0;"></div>
 
     <script>
         const CODES = [
@@ -331,6 +343,7 @@
                 `;
             }
 
+            // Рейтинг в 3 колонки: заполнение по вертикали (1–7, 8–13, 14–19)
             html += '<div class="ranking">';
             items.forEach((item, idx) => {
                 const rank = idx + 1;
