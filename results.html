@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Результаты голосования — Лучший доклад</title>
+    <title>Результаты голосования — Лучший доклад (тест)</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -53,6 +53,17 @@
             padding: 8px 18px;
             border-radius: 24px;
             white-space: nowrap;
+        }
+        .test-banner {
+            background: #fff0f1;
+            border: 2px dashed var(--rjd-red);
+            border-radius: 10px;
+            padding: 10px 16px;
+            font-size: 14px;
+            color: var(--rjd-red);
+            text-align: center;
+            margin-bottom: 20px;
+            font-weight: 600;
         }
 
         .winner-block {
@@ -206,6 +217,12 @@
             border-radius: 4px;
             font-family: monospace;
         }
+        .refresh-hint {
+            margin-top: 16px;
+            font-size: 13px;
+            color: #909090;
+            text-align: center;
+        }
 
         @media (max-width: 1100px) {
             body { padding: 16px; }
@@ -226,6 +243,8 @@
 </head>
 <body>
 
+    <div class="test-banner">🧪 ТЕСТОВЫЙ РЕЖИМ — данные обновляются при каждом открытии страницы</div>
+
     <header>
         <div>
             <h1>Лучший доклад</h1>
@@ -238,20 +257,21 @@
     <div id="content" style="display:none; flex-direction:column; flex:1;"></div>
 
     <script>
-         const CODES = [
+        const CODES = [
             "U-01","U-02","U-03","U-04","U-05","U-06","U-07",
             "U-08","U-09","U-10","U-11","U-12","U-13",
             "U-14","U-15","U-16","U-17","U-18","U-19"
         ];
 
-        // ⚠️ 必须与 vote.html 中的 NAMESPACE 完全一致
         const NAMESPACE = "rjd-conf-2026-best-report-v2";
 
         async function loadVotes() {
             const promises = CODES.map(async (code) => {
                 try {
-                    const res = await fetch(`https://abacus.jasoncameron.dev/get/${NAMESPACE}/${encodeURIComponent(code)}`);
-                    if (!res.ok) return { code, count: 0 }; // 404 = счётчик ещё не создан
+                    const res = await fetch(
+                        `https://abacus.jasoncameron.dev/get/${NAMESPACE}/${encodeURIComponent(code)}?_=${Date.now()}`
+                    );
+                    if (!res.ok) return { code, count: 0 };
                     const data = await res.json();
                     return { code, count: Number(data.value) || 0 };
                 } catch {
@@ -306,7 +326,7 @@
             } else {
                 html += `
                     <div class="error-box">
-                        Пока нет ни одного голоса.
+                        Пока нет ни одного голоса. Откройте <code>vote.html</code> и проголосуйте.
                     </div>
                 `;
             }
@@ -335,6 +355,7 @@
                 `;
             });
             html += '</div>';
+            html += '<div class="refresh-hint">Обновите страницу (F5), чтобы увидеть свежие данные</div>';
 
             content.innerHTML = html;
             document.getElementById('totalBadge').textContent = `Всего голосов: ${total}`;
@@ -342,11 +363,8 @@
 
         loadVotes().then(render).catch(e => {
             console.error(e);
-            document.getElementById('loading').textContent = 'Ошибка загрузки данных';
+            document.getElementById('loading').textContent = 'Ошибка загрузки данных: ' + e.message;
         });
-
-        // Опционально: автообновление каждые 30 секунд (для проектора)
-        // setInterval(() => loadVotes().then(render), 30000);
     </script>
 </body>
 </html>
