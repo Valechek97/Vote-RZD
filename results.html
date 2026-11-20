@@ -1,5 +1,4 @@
-
-       <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
@@ -29,7 +28,6 @@
             overflow: hidden;
         }
 
-        /* ===== Шапка: логотип | заголовок | счётчик ===== */
         header {
             display: flex;
             align-items: center;
@@ -78,7 +76,6 @@
             white-space: nowrap;
         }
 
-        /* ===== Победитель(и) ===== */
         .winner-block {
             display: flex;
             align-items: center;
@@ -146,7 +143,6 @@
             letter-spacing: 0.5px;
         }
 
-        /* ===== Рейтинг в 3 колонки ===== */
         .ranking {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -301,24 +297,34 @@
             "U-14","U-15","U-16","U-17","U-18","U-19"
         ];
 
+        // ⚠️ NAMESPACE должен совпадать с тем, что используется в vote.html
         const NAMESPACE = "project-test-v1";
+        const TALLYWIRE_BASE = "https://tallywire.cronpulse.workers.dev";
+
+        const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
         async function loadVotes() {
-            const promises = CODES.map(async (code) => {
-                try {
-                    const res = await fetch(
-                        `https://abacus.jasoncameron.dev/get/${NAMESPACE}/${encodeURIComponent(code)}?_=${Date.now()}`
-                    );
-                    if (!res.ok) return { code, count: 0 };
-                    const data = await res.json();
-                    return { code, count: Number(data.value) || 0 };
-                } catch {
-                    return { code, count: 0 };
-                }
-            });
-            const rows = await Promise.all(promises);
             const result = {};
-            rows.forEach(r => { result[r.code] = r.count; });
+            // Пакетная обработка: по 5 запросов с паузой 400 мс между группами
+            for (let i = 0; i < CODES.length; i += 5) {
+                const group = CODES.slice(i, i + 5);
+                const promises = group.map(async (code) => {
+                    try {
+                        const res = await fetch(
+                            `${TALLYWIRE_BASE}/get/${NAMESPACE}/${encodeURIComponent(code)}?_=${Date.now()}`
+                        );
+                        if (!res.ok) return { code, count: 0 };
+                        const data = await res.json();
+                        return { code, count: Number(data.value) || 0 };
+                    } catch {
+                        return { code, count: 0 };
+                    }
+                });
+                const rows = await Promise.all(promises);
+                rows.forEach(r => { result[r.code] = r.count; });
+
+                if (i + 5 < CODES.length) await sleep(400);
+            }
             return result;
         }
 
