@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Голосование — Лучший доклад</title>
+    <title>Голосование — Лучший доклад (тест)</title>
     <style>
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body {
@@ -107,13 +107,28 @@
             text-align: center;
             max-width: 400px;
         }
+        .test-banner {
+            width: 100%;
+            max-width: 400px;
+            background: #fff0f1;
+            border: 2px dashed #CD202C;
+            border-radius: 10px;
+            padding: 8px 12px;
+            font-size: 12px;
+            color: #CD202C;
+            text-align: center;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
 
+    <div class="test-banner">🧪 ТЕСТОВЫЙ РЕЖИМ — ограничение повторного голосования отключено</div>
+
     <div class="header">
         <h1>Лучший доклад</h1>
-        <p>Выберите шифр наилучшего на Ваш взгляд доклада и нажмите кнопку</p>
+        <p>Выберите один шифр и нажмите кнопку</p>
     </div>
 
     <div class="grid-container">
@@ -125,22 +140,20 @@
     <div class="submit-area">
         <button id="submitBtn" disabled onclick="submitVote()">Проголосовать</button>
     </div>
-    <div class="footer-note">Один голос с одного устройства. Голос нельзя изменить.</div>
+    <div class="footer-note">Тестовый режим: один и тот же пользователь может голосовать многократно.</div>
 
     <script>
-         const CODES = [
+        const CODES = [
             "U-01","U-02","U-03","U-04","U-05","U-06","U-07",
             "U-08","U-09","U-10","U-11","U-12","U-13",
             "U-14","U-15","U-16","U-17","U-18","U-19"
         ];
 
-        // ⚠️ 务必改成你自己唯一的命名空间
-        const NAMESPACE = "rjd-conf-2026-best-report";
-        const VOTED_KEY = "rjd_vote_conference_2026";
+        const NAMESPACE = "rjd-conf-2026-best-report-v2";
+        // VOTED_KEY намеренно не используется в тестовом режиме
 
         let selectedCode = null;
 
-        // 渲染按钮：7 / 6 / 6
         const col1 = document.getElementById('col1');
         const col2 = document.getElementById('col2');
         const col3 = document.getElementById('col3');
@@ -155,23 +168,7 @@
             else col3.appendChild(btn);
         });
 
-        // 已投票则直接锁定
-        if (localStorage.getItem(VOTED_KEY)) {
-            lockUI();
-        }
-
-        function lockUI() {
-            document.querySelectorAll('.vote-btn').forEach(b => {
-                b.disabled = true;
-                b.style.opacity = '0.5';
-            });
-            const btn = document.getElementById('submitBtn');
-            btn.disabled = true;
-            btn.textContent = 'Вы уже голосовали';
-        }
-
         window.selectVote = function(code, btn) {
-            if (localStorage.getItem(VOTED_KEY)) return;
             selectedCode = code;
             document.querySelectorAll('.vote-btn').forEach(b => b.classList.remove('selected'));
             btn.classList.add('selected');
@@ -179,29 +176,31 @@
         };
 
         window.submitVote = async function() {
-            if (!selectedCode || localStorage.getItem(VOTED_KEY)) return;
+            if (!selectedCode) return;
 
             const btn = document.getElementById('submitBtn');
             btn.disabled = true;
             btn.textContent = 'Отправка…';
 
             try {
-                const url = `https://abacus.jasoncameron.dev/hit/${NAMESPACE}/${encodeURIComponent(selectedCode)}`;
+                const url = `https://abacus.jasoncameron.dev/hit/${NAMESPACE}/${encodeURIComponent(selectedCode)}?_=${Date.now()}`;
                 const res = await fetch(url);
                 if (!res.ok) throw new Error('HTTP ' + res.status);
 
-                localStorage.setItem(VOTED_KEY, 'true');
-
+                // Тестовый режим: НЕ записываем в localStorage, показываем подтверждение
                 document.body.innerHTML = `
                     <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;text-align:center;padding:20px;">
                         <div style="font-size:72px;color:#CD202C;line-height:1;">✓</div>
-                        <h2 style="color:#CD202C;margin:16px 0 8px;">Спасибо!</h2>
-                        <p style="color:#394A58;font-size:16px;">Ваш голос за <strong>${selectedCode}</strong> принят.</p>
+                        <h2 style="color:#CD202C;margin:16px 0 8px;">Голос принят (тест)</h2>
+                        <p style="color:#394A58;font-size:16px;">Ваш голос за <strong>${selectedCode}</strong> записан.</p>
+                        <button onclick="location.reload()" style="margin-top:24px;padding:12px 24px;background:#CD202C;color:#fff;border:none;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;font-family:inherit;">
+                            Проголосовать ещё раз
+                        </button>
                     </div>
                 `;
             } catch (e) {
                 console.error(e);
-                alert('Не удалось отправить голос. Проверьте интернет и попробуйте снова.');
+                alert('Не удалось отправить голос: ' + e.message + '\n\nПроверьте интернет или подождите 10 секунд (лимит запросов Abacus).');
                 btn.disabled = false;
                 btn.textContent = 'Проголосовать';
             }
