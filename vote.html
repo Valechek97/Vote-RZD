@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Голосование — Лучший доклад (тест)</title>
+    <title>Голосование — Лучший доклад</title>
     <style>
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body {
@@ -71,6 +71,10 @@
             color: #ffffff;
             box-shadow: 0 2px 8px rgba(205, 32, 44, 0.4);
         }
+        .vote-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
         .submit-area {
             width: 100%;
             max-width: 400px;
@@ -107,24 +111,9 @@
             text-align: center;
             max-width: 400px;
         }
-        .test-banner {
-            width: 100%;
-            max-width: 400px;
-            background: #fff0f1;
-            border: 2px dashed #CD202C;
-            border-radius: 10px;
-            padding: 8px 12px;
-            font-size: 12px;
-            color: #CD202C;
-            text-align: center;
-            margin-bottom: 12px;
-            font-weight: 600;
-        }
     </style>
 </head>
 <body>
-
-    <div class="test-banner">🧪 ТЕСТОВЫЙ РЕЖИМ — ограничение повторного голосования отключено</div>
 
     <div class="header">
         <h1>Лучший доклад</h1>
@@ -140,7 +129,7 @@
     <div class="submit-area">
         <button id="submitBtn" disabled onclick="submitVote()">Проголосовать</button>
     </div>
-    <div class="footer-note">Тестовый режим: один и тот же пользователь может голосовать многократно.</div>
+    <div class="footer-note">Один голос за сессию браузера. Голос нельзя изменить до перезапуска браузера.</div>
 
     <script>
         const CODES = [
@@ -150,7 +139,8 @@
         ];
 
         const NAMESPACE = "rjd-conf-2026-best-report-v2";
-        // VOTED_KEY намеренно не используется в тестовом режиме
+        // sessionStorage вместо localStorage: очищается при закрытии вкладки/браузера
+        const VOTED_KEY = "rjd_vote_conference_2026";
 
         let selectedCode = null;
 
@@ -168,7 +158,22 @@
             else col3.appendChild(btn);
         });
 
+        // Проверка именно sessionStorage
+        if (sessionStorage.getItem(VOTED_KEY)) {
+            lockUI();
+        }
+
+        function lockUI() {
+            document.querySelectorAll('.vote-btn').forEach(b => {
+                b.disabled = true;
+            });
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.textContent = 'Вы уже голосовали';
+        }
+
         window.selectVote = function(code, btn) {
+            if (sessionStorage.getItem(VOTED_KEY)) return;
             selectedCode = code;
             document.querySelectorAll('.vote-btn').forEach(b => b.classList.remove('selected'));
             btn.classList.add('selected');
@@ -176,7 +181,7 @@
         };
 
         window.submitVote = async function() {
-            if (!selectedCode) return;
+            if (!selectedCode || sessionStorage.getItem(VOTED_KEY)) return;
 
             const btn = document.getElementById('submitBtn');
             btn.disabled = true;
@@ -187,15 +192,14 @@
                 const res = await fetch(url);
                 if (!res.ok) throw new Error('HTTP ' + res.status);
 
-                // Тестовый режим: НЕ записываем в localStorage, показываем подтверждение
+                // Записываем флаг в sessionStorage — переживёт F5, но исчезнет при закрытии вкладки
+                sessionStorage.setItem(VOTED_KEY, 'true');
+
                 document.body.innerHTML = `
                     <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;text-align:center;padding:20px;">
                         <div style="font-size:72px;color:#CD202C;line-height:1;">✓</div>
-                        <h2 style="color:#CD202C;margin:16px 0 8px;">Голос принят (тест)</h2>
-                        <p style="color:#394A58;font-size:16px;">Ваш голос за <strong>${selectedCode}</strong> записан.</p>
-                        <button onclick="location.reload()" style="margin-top:24px;padding:12px 24px;background:#CD202C;color:#fff;border:none;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;font-family:inherit;">
-                            Проголосовать ещё раз
-                        </button>
+                        <h2 style="color:#CD202C;margin:16px 0 8px;">Спасибо!</h2>
+                        <p style="color:#394A58;font-size:16px;">Ваш голос за <strong>${selectedCode}</strong> принят.</p>
                     </div>
                 `;
             } catch (e) {
