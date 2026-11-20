@@ -1,36 +1,51 @@
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Результаты голосования — Лучший доклад (тест)</title>
+    <title>Результаты голосования — Лучший доклад</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
         :root {
-            --rjd-red: #CD202C;
-            --rjd-dark: #394A58;
-            --rjd-gray: #BFC5CE;
-            --rjd-light: #F4F4F4;
+            --emerald: #0E7A5F;
+            --emerald-dark: #0A5A46;
+            --emerald-accent: #14B88A;
+            --emerald-light: #E6F4EF;
+            --emerald-border: #B9DED2;
+            --text-dark: #0A2E24;
+            --text-muted: #7A968C;
         }
 
         body {
             font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             background: #ffffff;
-            color: #000000;
+            color: var(--text-dark);
             min-height: 100vh;
-            padding: 18px 24px 20px;
+            padding: 14px 24px 18px;
             display: flex;
             flex-direction: column;
             overflow: hidden;
+        }
+
+        /* Логотип слева */
+        .logo-bar {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            flex-shrink: 0;
+        }
+        .logo-bar img {
+            max-height: 52px;
+            max-width: 220px;
+            object-fit: contain;
         }
 
         header {
             display: flex;
             justify-content: space-between;
             align-items: flex-end;
-            border-bottom: 4px solid var(--rjd-red);
+            border-bottom: 4px solid var(--emerald);
             padding-bottom: 10px;
             margin-bottom: 14px;
             flex-shrink: 0;
@@ -38,81 +53,69 @@
         h1 {
             font-size: 30px;
             font-weight: 800;
-            color: var(--rjd-red);
+            color: var(--emerald);
             letter-spacing: 0.4px;
             line-height: 1.1;
         }
         .subtitle {
             font-size: 15px;
-            color: var(--rjd-dark);
+            color: var(--emerald-dark);
             font-weight: 500;
             margin-top: 3px;
         }
         .total-badge {
             font-size: 17px;
-            color: var(--rjd-dark);
+            color: var(--emerald-dark);
             font-weight: 600;
-            background: var(--rjd-light);
+            background: var(--emerald-light);
             padding: 7px 16px;
             border-radius: 22px;
             white-space: nowrap;
         }
-        .test-banner {
-            background: #fff0f1;
-            border: 2px dashed var(--rjd-red);
-            border-radius: 8px;
-            padding: 6px 14px;
-            font-size: 12px;
-            color: var(--rjd-red);
-            text-align: center;
-            margin-bottom: 12px;
-            font-weight: 600;
-            flex-shrink: 0;
-        }
 
-        /* ===== Победитель ===== */
+        /* Победитель */
         .winner-block {
             display: flex;
             align-items: center;
             gap: 20px;
-            background: linear-gradient(135deg, #fff5f5 0%, #ffe8ea 100%);
-            border: 3px solid var(--rjd-red);
+            background: linear-gradient(135deg, #F2FAF7 0%, #E0F2EA 100%);
+            border: 3px solid var(--emerald);
             border-radius: 16px;
             padding: 16px 26px;
             margin-bottom: 16px;
-            box-shadow: 0 6px 20px rgba(205, 32, 44, 0.15);
+            box-shadow: 0 6px 20px rgba(14, 122, 95, 0.15);
             flex-shrink: 0;
         }
         .cup {
             font-size: 54px;
             line-height: 1;
-            filter: drop-shadow(0 4px 8px rgba(205, 32, 44, 0.3));
+            filter: drop-shadow(0 4px 8px rgba(14, 122, 95, 0.3));
         }
         .winner-info { flex: 1; }
         .winner-label {
             font-size: 13px;
             text-transform: uppercase;
             letter-spacing: 2px;
-            color: var(--rjd-red);
+            color: var(--emerald);
             font-weight: 700;
             margin-bottom: 2px;
         }
         .winner-code {
             font-size: 44px;
             font-weight: 900;
-            color: var(--rjd-red);
+            color: var(--emerald);
             line-height: 1;
             margin-bottom: 4px;
         }
         .winner-stats {
             font-size: 17px;
-            color: var(--rjd-dark);
+            color: var(--emerald-dark);
             font-weight: 600;
         }
         .winner-percent {
             font-size: 36px;
             font-weight: 900;
-            color: var(--rjd-red);
+            color: var(--emerald);
             margin-left: auto;
             text-align: right;
         }
@@ -120,11 +123,11 @@
             display: block;
             font-size: 13px;
             font-weight: 600;
-            color: var(--rjd-dark);
+            color: var(--emerald-dark);
             letter-spacing: 0.5px;
         }
 
-        /* ===== Рейтинг в 3 колонки ===== */
+        /* Рейтинг в 3 колонки */
         .ranking {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -138,47 +141,47 @@
             align-items: center;
             gap: 8px;
             padding: 7px 10px;
-            background: var(--rjd-light);
+            background: var(--emerald-light);
             border-radius: 8px;
-            border-left: 5px solid var(--rjd-gray);
+            border-left: 5px solid var(--emerald-border);
             min-height: 40px;
         }
         .rank-row.top3 {
-            border-left-color: var(--rjd-red);
-            background: #fff0f1;
+            border-left-color: var(--emerald);
+            background: #F2FAF7;
         }
         .rank-row.winner-row {
-            border-left-color: var(--rjd-red);
-            background: #ffe3e6;
+            border-left-color: var(--emerald);
+            background: #E0F2EA;
         }
         .rank-num {
             font-size: 18px;
             font-weight: 900;
-            color: var(--rjd-gray);
+            color: var(--emerald-border);
             text-align: center;
         }
-        .top3 .rank-num { color: var(--rjd-red); }
+        .top3 .rank-num { color: var(--emerald); }
         .rank-code {
             font-size: 15px;
             font-weight: 800;
             color: #000;
             white-space: nowrap;
         }
-        .winner-row .rank-code { color: var(--rjd-red); }
+        .winner-row .rank-code { color: var(--emerald); }
         .rank-bar-wrap {
             height: 14px;
-            background: #e0e0e0;
+            background: #D8E8E2;
             border-radius: 7px;
             overflow: hidden;
         }
         .rank-bar {
             height: 100%;
             border-radius: 7px;
-            background: var(--rjd-dark);
+            background: var(--emerald-dark);
             transition: width 1s cubic-bezier(0.22, 1, 0.36, 1);
             width: 0%;
         }
-        .top3 .rank-bar { background: var(--rjd-red); }
+        .top3 .rank-bar { background: var(--emerald); }
         .rank-values {
             display: flex;
             flex-direction: column;
@@ -190,10 +193,10 @@
             font-weight: 800;
             color: #000;
         }
-        .top3 .rank-percent { color: var(--rjd-red); }
+        .top3 .rank-percent { color: var(--emerald); }
         .rank-count {
             font-size: 10px;
-            color: #707070;
+            color: var(--text-muted);
             font-weight: 500;
             white-space: nowrap;
         }
@@ -201,20 +204,20 @@
         #loading {
             text-align: center;
             font-size: 20px;
-            color: #909090;
+            color: var(--text-muted);
             padding: 60px 0;
         }
         .error-box {
-            background: #fff0f1;
-            border: 2px solid var(--rjd-red);
+            background: #F2FAF7;
+            border: 2px solid var(--emerald);
             border-radius: 12px;
             padding: 20px;
-            color: var(--rjd-red);
+            color: var(--emerald);
             font-size: 15px;
             margin-top: 16px;
         }
         .error-box code {
-            background: #ffe3e6;
+            background: #E0F2EA;
             padding: 2px 8px;
             border-radius: 4px;
             font-family: monospace;
@@ -222,12 +225,11 @@
         .refresh-hint {
             margin-top: 10px;
             font-size: 12px;
-            color: #909090;
+            color: var(--text-muted);
             text-align: center;
             flex-shrink: 0;
         }
 
-        /* Подгонка под небольшие экраны (планшеты, ноутбуки) */
         @media (max-width: 1100px) {
             body { padding: 12px; }
             h1 { font-size: 24px; }
@@ -245,7 +247,6 @@
             .rank-count { font-size: 9px; }
         }
 
-        /* Узкие экраны: 2 колонки */
         @media (max-width: 760px) {
             body { overflow: auto; }
             .ranking { grid-template-columns: repeat(2, 1fr); }
@@ -256,7 +257,9 @@
 </head>
 <body>
 
-    <div class="test-banner">🧪 ТЕСТОВЫЙ РЕЖИМ — данные обновляются при каждом открытии страницы</div>
+    <div class="logo-bar">
+        <img src="logo.png" alt="Логотип">
+    </div>
 
     <header>
         <div>
@@ -276,7 +279,7 @@
             "U-14","U-15","U-16","U-17","U-18","U-19"
         ];
 
-        const NAMESPACE = "rjd-conf-2026-final-clean-xyz";
+        const NAMESPACE = "rjd-conf-2026-best-report-v2";
 
         async function loadVotes() {
             const promises = CODES.map(async (code) => {
@@ -344,7 +347,6 @@
                 `;
             }
 
-            // Рейтинг в 3 колонки: заполнение по вертикали (1–7, 8–13, 14–19)
             html += '<div class="ranking">';
             items.forEach((item, idx) => {
                 const rank = idx + 1;
