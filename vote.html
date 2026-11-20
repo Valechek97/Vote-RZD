@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Голосование — Лучший доклад</title>
+    <style>
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body {
+            margin: 0;
+            padding: 16px;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: #ffffff;
+            color: #000000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .header {
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 3px solid #CD202C;
+        }
+        .header h1 {
+            font-size: 20px;
+            margin: 0 0 4px 0;
+            color: #CD202C;
+            font-weight: 700;
+        }
+        .header p {
+            font-size: 13px;
+            margin: 0;
+            color: #394A58;
+        }
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            width: 100%;
+            max-width: 400px;
+            margin-bottom: 20px;
+        }
+        .col {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .vote-btn {
+            background: #f4f4f4;
+            border: 2px solid #D3D3D3;
+            border-radius: 10px;
+            padding: 14px 0;
+            font-size: 16px;
+            font-weight: 600;
+            color: #000;
+            cursor: pointer;
+            transition: all 0.15s;
+            text-align: center;
+            font-family: inherit;
+            width: 100%;
+            user-select: none;
+        }
+        .vote-btn:active { background: #e0e0e0; }
+        .vote-btn.selected {
+            background: #CD202C;
+            border-color: #CD202C;
+            color: #ffffff;
+            box-shadow: 0 2px 8px rgba(205, 32, 44, 0.4);
+        }
+        .submit-area {
+            width: 100%;
+            max-width: 400px;
+            position: sticky;
+            bottom: 16px;
+            background: #fff;
+            padding-top: 10px;
+        }
+        #submitBtn {
+            width: 100%;
+            padding: 16px;
+            background: #CD202C;
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-family: inherit;
+        }
+        #submitBtn:disabled {
+            background: #BFC5CE;
+            color: #fff;
+            cursor: not-allowed;
+        }
+        #submitBtn:not(:disabled):active {
+            background: #a01822;
+        }
+        .footer-note {
+            margin-top: 12px;
+            font-size: 11px;
+            color: #828282;
+            text-align: center;
+            max-width: 400px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>Лучший доклад</h1>
+        <p>Выберите шифр наилучшего на Ваш взгляд доклада и нажмите кнопку</p>
+    </div>
+
+    <div class="grid-container">
+        <div class="col" id="col1"></div>
+        <div class="col" id="col2"></div>
+        <div class="col" id="col3"></div>
+    </div>
+
+    <div class="submit-area">
+        <button id="submitBtn" disabled onclick="submitVote()">Проголосовать</button>
+    </div>
+    <div class="footer-note">Один голос с одного устройства. Голос нельзя изменить.</div>
+
+    <script>
+        const CODES = [
+            "У-01","У-02","У-03","У-04","У-05","У-06","У-07",
+            "У-08","У-09","У-10","У-11","У-12","У-13",
+            "У-14","У-15","У-16","У-17","У-18","У-19"
+        ];
+
+        // ⚠️ 务必改成你自己唯一的命名空间
+        const NAMESPACE = "rjd-conf-2026-best-report";
+        const VOTED_KEY = "rjd_vote_conference_2026";
+
+        let selectedCode = null;
+
+        // 渲染按钮：7 / 6 / 6
+        const col1 = document.getElementById('col1');
+        const col2 = document.getElementById('col2');
+        const col3 = document.getElementById('col3');
+
+        CODES.forEach((code, index) => {
+            const btn = document.createElement('button');
+            btn.className = 'vote-btn';
+            btn.textContent = code;
+            btn.onclick = function() { selectVote(code, this); };
+            if (index < 7) col1.appendChild(btn);
+            else if (index < 13) col2.appendChild(btn);
+            else col3.appendChild(btn);
+        });
+
+        // 已投票则直接锁定
+        if (localStorage.getItem(VOTED_KEY)) {
+            lockUI();
+        }
+
+        function lockUI() {
+            document.querySelectorAll('.vote-btn').forEach(b => {
+                b.disabled = true;
+                b.style.opacity = '0.5';
+            });
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.textContent = 'Вы уже голосовали';
+        }
+
+        window.selectVote = function(code, btn) {
+            if (localStorage.getItem(VOTED_KEY)) return;
+            selectedCode = code;
+            document.querySelectorAll('.vote-btn').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            document.getElementById('submitBtn').disabled = false;
+        };
+
+        window.submitVote = async function() {
+            if (!selectedCode || localStorage.getItem(VOTED_KEY)) return;
+
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.textContent = 'Отправка…';
+
+            try {
+                const url = `https://abacus.jasoncameron.dev/hit/${NAMESPACE}/${encodeURIComponent(selectedCode)}`;
+                const res = await fetch(url);
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+
+                localStorage.setItem(VOTED_KEY, 'true');
+
+                document.body.innerHTML = `
+                    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;text-align:center;padding:20px;">
+                        <div style="font-size:72px;color:#CD202C;line-height:1;">✓</div>
+                        <h2 style="color:#CD202C;margin:16px 0 8px;">Спасибо!</h2>
+                        <p style="color:#394A58;font-size:16px;">Ваш голос за <strong>${selectedCode}</strong> принят.</p>
+                    </div>
+                `;
+            } catch (e) {
+                console.error(e);
+                alert('Не удалось отправить голос. Проверьте интернет и попробуйте снова.');
+                btn.disabled = false;
+                btn.textContent = 'Проголосовать';
+            }
+        };
+    </script>
+</body>
+</html>

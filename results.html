@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Результаты голосования — Лучший доклад</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --rjd-red: #CD202C;
+            --rjd-dark: #394A58;
+            --rjd-gray: #BFC5CE;
+            --rjd-light: #F4F4F4;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: #ffffff;
+            color: #000000;
+            min-height: 100vh;
+            padding: 24px 36px 32px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            border-bottom: 4px solid var(--rjd-red);
+            padding-bottom: 14px;
+            margin-bottom: 24px;
+        }
+        h1 {
+            font-size: 34px;
+            font-weight: 800;
+            color: var(--rjd-red);
+            letter-spacing: 0.4px;
+            line-height: 1.1;
+        }
+        .subtitle {
+            font-size: 17px;
+            color: var(--rjd-dark);
+            font-weight: 500;
+            margin-top: 4px;
+        }
+        .total-badge {
+            font-size: 18px;
+            color: var(--rjd-dark);
+            font-weight: 600;
+            background: var(--rjd-light);
+            padding: 8px 18px;
+            border-radius: 24px;
+            white-space: nowrap;
+        }
+
+        .winner-block {
+            display: flex;
+            align-items: center;
+            gap: 28px;
+            background: linear-gradient(135deg, #fff5f5 0%, #ffe8ea 100%);
+            border: 3px solid var(--rjd-red);
+            border-radius: 20px;
+            padding: 24px 32px;
+            margin-bottom: 28px;
+            box-shadow: 0 8px 24px rgba(205, 32, 44, 0.15);
+            animation: winnerPulse 2.5s ease-in-out infinite;
+        }
+        @keyframes winnerPulse {
+            0%, 100% { box-shadow: 0 8px 24px rgba(205, 32, 44, 0.15); }
+            50%      { box-shadow: 0 8px 36px rgba(205, 32, 44, 0.35); }
+        }
+        .cup {
+            font-size: 72px;
+            line-height: 1;
+            filter: drop-shadow(0 4px 8px rgba(205, 32, 44, 0.3));
+        }
+        .winner-info { flex: 1; }
+        .winner-label {
+            font-size: 15px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--rjd-red);
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        .winner-code {
+            font-size: 56px;
+            font-weight: 900;
+            color: var(--rjd-red);
+            line-height: 1;
+            margin-bottom: 8px;
+        }
+        .winner-stats {
+            font-size: 20px;
+            color: var(--rjd-dark);
+            font-weight: 600;
+        }
+        .winner-percent {
+            font-size: 44px;
+            font-weight: 900;
+            color: var(--rjd-red);
+            margin-left: auto;
+            text-align: right;
+        }
+        .winner-percent small {
+            display: block;
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--rjd-dark);
+            letter-spacing: 0.5px;
+        }
+
+        .ranking {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            flex: 1;
+        }
+        .rank-row {
+            display: grid;
+            grid-template-columns: 56px 110px 1fr 170px;
+            align-items: center;
+            gap: 18px;
+            padding: 12px 18px;
+            background: var(--rjd-light);
+            border-radius: 12px;
+            border-left: 6px solid var(--rjd-gray);
+        }
+        .rank-row.top3 {
+            border-left-color: var(--rjd-red);
+            background: #fff0f1;
+        }
+        .rank-row.winner-row {
+            border-left-color: var(--rjd-red);
+            background: #ffe3e6;
+            font-weight: 700;
+        }
+        .rank-num {
+            font-size: 26px;
+            font-weight: 900;
+            color: var(--rjd-gray);
+            text-align: center;
+        }
+        .top3 .rank-num { color: var(--rjd-red); }
+        .rank-code {
+            font-size: 22px;
+            font-weight: 800;
+            color: #000;
+        }
+        .winner-row .rank-code { color: var(--rjd-red); }
+        .rank-bar-wrap {
+            height: 22px;
+            background: #e0e0e0;
+            border-radius: 11px;
+            overflow: hidden;
+        }
+        .rank-bar {
+            height: 100%;
+            border-radius: 11px;
+            background: var(--rjd-dark);
+            transition: width 1s cubic-bezier(0.22, 1, 0.36, 1);
+            width: 0%;
+        }
+        .top3 .rank-bar { background: var(--rjd-red); }
+        .rank-values {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: 12px;
+            font-size: 16px;
+            color: var(--rjd-dark);
+        }
+        .rank-percent {
+            font-size: 22px;
+            font-weight: 800;
+            color: #000;
+        }
+        .top3 .rank-percent { color: var(--rjd-red); }
+        .rank-count {
+            font-size: 14px;
+            color: #707070;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        #loading {
+            text-align: center;
+            font-size: 22px;
+            color: #909090;
+            padding: 60px 0;
+        }
+        .error-box {
+            background: #fff0f1;
+            border: 2px solid var(--rjd-red);
+            border-radius: 12px;
+            padding: 24px;
+            color: var(--rjd-red);
+            font-size: 16px;
+            margin-top: 20px;
+        }
+        .error-box code {
+            background: #ffe3e6;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+
+        @media (max-width: 1100px) {
+            body { padding: 16px; }
+            h1 { font-size: 26px; }
+            .winner-block { flex-wrap: wrap; gap: 16px; }
+            .cup { font-size: 54px; }
+            .winner-code { font-size: 40px; }
+            .winner-percent { font-size: 32px; margin-left: 0; text-align: left; }
+            .rank-row {
+                grid-template-columns: 40px 80px 1fr 130px;
+                gap: 10px;
+                padding: 10px 12px;
+            }
+            .rank-code { font-size: 18px; }
+            .rank-percent { font-size: 18px; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div>
+            <h1>Лучший доклад</h1>
+            <div class="subtitle">Итоги голосования в зале</div>
+        </div>
+        <div class="total-badge" id="totalBadge">Всего голосов: —</div>
+    </header>
+
+    <div id="loading">Загрузка результатов…</div>
+    <div id="content" style="display:none; flex-direction:column; flex:1;"></div>
+
+    <script>
+        const CODES = [
+            "У-01","У-02","У-03","У-04","У-05","У-06","У-07",
+            "У-08","У-09","У-10","У-11","У-12","У-13",
+            "У-14","У-15","У-16","У-17","У-18","У-19"
+        ];
+
+        // ⚠️ 必须与 vote.html 中的 NAMESPACE 完全一致
+        const NAMESPACE = "rjd-conf-2026-best-report";
+
+        async function loadVotes() {
+            const promises = CODES.map(async (code) => {
+                try {
+                    const res = await fetch(`https://abacus.jasoncameron.dev/get/${NAMESPACE}/${encodeURIComponent(code)}`);
+                    if (!res.ok) return { code, count: 0 }; // 404 = счётчик ещё не создан
+                    const data = await res.json();
+                    return { code, count: Number(data.value) || 0 };
+                } catch {
+                    return { code, count: 0 };
+                }
+            });
+            const rows = await Promise.all(promises);
+            const result = {};
+            rows.forEach(r => { result[r.code] = r.count; });
+            return result;
+        }
+
+        function render(votes) {
+            const items = CODES.map(code => ({
+                code,
+                count: Number(votes[code]) || 0
+            }));
+
+            const total = items.reduce((s, i) => s + i.count, 0);
+            items.forEach(i => {
+                i.percent = total > 0 ? (i.count / total * 100) : 0;
+            });
+
+            items.sort((a, b) => {
+                if (b.count !== a.count) return b.count - a.count;
+                return a.code.localeCompare(b.code);
+            });
+
+            const winner = total > 0 ? items[0] : null;
+
+            const content = document.getElementById('content');
+            document.getElementById('loading').style.display = 'none';
+            content.style.display = 'flex';
+
+            let html = '';
+
+            if (winner) {
+                html += `
+                    <div class="winner-block">
+                        <div class="cup">🏆</div>
+                        <div class="winner-info">
+                            <div class="winner-label">Победитель</div>
+                            <div class="winner-code">${winner.code}</div>
+                            <div class="winner-stats">${winner.count} голосов из ${total}</div>
+                        </div>
+                        <div class="winner-percent">
+                            ${winner.percent.toFixed(1)}%
+                            <small>от всех голосов</small>
+                        </div>
+                    </div>
+                `;
+            } else {
+                html += `
+                    <div class="error-box">
+                        Пока нет ни одного голоса.
+                    </div>
+                `;
+            }
+
+            html += '<div class="ranking">';
+            items.forEach((item, idx) => {
+                const rank = idx + 1;
+                const isWinner = winner && item.code === winner.code;
+                const isTop3 = rank <= 3;
+                const rowClass = isWinner ? 'rank-row winner-row'
+                               : isTop3   ? 'rank-row top3'
+                                          : 'rank-row';
+
+                html += `
+                    <div class="${rowClass}">
+                        <div class="rank-num">${rank}</div>
+                        <div class="rank-code">${item.code}</div>
+                        <div class="rank-bar-wrap">
+                            <div class="rank-bar" style="width:${item.percent}%"></div>
+                        </div>
+                        <div class="rank-values">
+                            <span class="rank-percent">${item.percent.toFixed(1)}%</span>
+                            <span class="rank-count">${item.count} г.</span>
+                        </div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+
+            content.innerHTML = html;
+            document.getElementById('totalBadge').textContent = `Всего голосов: ${total}`;
+        }
+
+        loadVotes().then(render).catch(e => {
+            console.error(e);
+            document.getElementById('loading').textContent = 'Ошибка загрузки данных';
+        });
+
+        // Опционально: автообновление каждые 30 секунд (для проектора)
+        // setInterval(() => loadVotes().then(render), 30000);
+    </script>
+</body>
+</html>
