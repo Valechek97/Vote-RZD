@@ -299,22 +299,27 @@
 
         // ⚠️ Должен совпадать с vote.html
         const NAMESPACE = "prof-uprav-2026-v2-final";
-        const TALLYWIRE_BASE = "https://tallywire.cronpulse.workers.dev";
+        const ABACUS_BASE = "https://abacus.jasoncameron.dev";
 
         const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-        // Один запрос с одной повторной попыткой при 429
+        // Один запрос с обработкой 404 (счётчик не создан) и повтором при 429
         async function fetchOne(code) {
-            const url = `${TALLYWIRE_BASE}/get/${NAMESPACE}/${encodeURIComponent(code)}?_=${Date.now()}`;
+            const url = `${ABACUS_BASE}/get/${NAMESPACE}/${encodeURIComponent(code)}?_=${Date.now()}`;
             for (let attempt = 0; attempt < 2; attempt++) {
                 try {
                     const res = await fetch(url, { cache: 'no-store' });
+
+                    // 404 = счётчик ещё не создан (никто не голосовал за этот шифр)
+                    if (res.status === 404) return 0;
+
                     if (res.status === 429) {
-                        // Слишком много запросов — ждём и пробуем ещё раз
+                        // Лимит Abacus: 30 запросов / 10 сек. Ждём и пробуем ещё раз
                         await sleep(2000);
                         continue;
                     }
                     if (!res.ok) return 0;
+
                     const data = await res.json();
                     return Number(data.value) || 0;
                 } catch {
@@ -327,7 +332,7 @@
 
         async function loadVotes() {
             const result = {};
-            // Пакетами по 5 с паузой 800 мс между группами
+            // Пакетами по 5 с паузой 800 мс между группами (лимит Abacus: 30/10сек)
             for (let i = 0; i < CODES.length; i += 5) {
                 const group = CODES.slice(i, i + 5);
                 const counts = await Promise.all(group.map(fetchOne));
@@ -438,3 +443,4 @@
     </script>
 </body>
 </html>
+    
