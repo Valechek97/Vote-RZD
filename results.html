@@ -308,7 +308,7 @@
             const url = `${TALLYWIRE_BASE}/get/${NAMESPACE}/${encodeURIComponent(code)}?_=${Date.now()}`;
             for (let attempt = 0; attempt < 2; attempt++) {
                 try {
-                    const res = await fetch(url);
+                    const res = await fetch(url, { cache: 'no-store' });
                     if (res.status === 429) {
                         // Слишком много запросов — ждём и пробуем ещё раз
                         await sleep(2000);
