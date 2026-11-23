@@ -24,13 +24,11 @@
             justify-content: center;
             margin-bottom: 8px;
         }
-        
-       .logo-wrap img {
-            max-height: 128px;   /* было 64px */
+        .logo-wrap img {
+            max-height: 128px;
             max-width: 80%;
             object-fit: contain;
         }
-        
         .header {
             width: 100%;
             max-width: 400px;
@@ -134,7 +132,7 @@
     </div>
 
     <div class="header">
-        <h1>Лучший проект конкурса «Професионалы управления имуществом»</h1>
+        <h1>Лучший проект конкурса «Професионал управления имуществом»</h1>
         <p>Выберите шифр лучшего на Ваш взгляд проекта и нажмите кнопку</p>
     </div>
 
@@ -147,7 +145,7 @@
     <div class="submit-area">
         <button id="submitBtn" disabled onclick="submitVote()">Проголосовать</button>
     </div>
-    <div class="footer-note">--</div> 
+    <div class="footer-note">Один голос за сессию браузера. Голос нельзя изменить до перезапуска браузера.</div>
 
     <script>
         const CODES = [
@@ -156,8 +154,10 @@
             "U-14","U-15","U-16","U-17","U-18","U-19"
         ];
 
-        const NAMESPACE = "project-test-v1";
-        const VOTED_KEY = "rjd_vote_conference_2026";
+        // ⚠️ Должен совпадать с results.html
+        const NAMESPACE = "prof-uprav-2026-emerald-7k2";
+        const TALLYWIRE_BASE = "https://tallywire.cronpulse.workers.dev";
+        const VOTED_KEY = "prof_uprav_vote_2026";
 
         let selectedCode = null;
 
@@ -204,9 +204,16 @@
             btn.textContent = 'Отправка…';
 
             try {
-                const url = `https://abacus.jasoncameron.dev/hit/${NAMESPACE}/${encodeURIComponent(selectedCode)}?_=${Date.now()}`;
+                const url = `${TALLYWIRE_BASE}/hit/${NAMESPACE}/${encodeURIComponent(selectedCode)}?_=${Date.now()}`;
                 const res = await fetch(url);
                 if (!res.ok) throw new Error('HTTP ' + res.status);
+
+                // Tallywire возвращает JSON с полем counted — проверяем, что голос реально учтён
+                let data = null;
+                try { data = await res.json(); } catch (_) {}
+                if (data && data.counted === false) {
+                    throw new Error('Голос не учтён сервисом');
+                }
 
                 sessionStorage.setItem(VOTED_KEY, 'true');
 
@@ -219,7 +226,7 @@
                 `;
             } catch (e) {
                 console.error(e);
-                alert('Не удалось отправить голос: ' + e.message + '\n\nПроверьте интернет или подождите 10 секунд (лимит запросов Abacus).');
+                alert('Не удалось отправить голос: ' + e.message + '\n\nПроверьте интернет или подождите немного и попробуйте снова.');
                 btn.disabled = false;
                 btn.textContent = 'Проголосовать';
             }
