@@ -237,6 +237,18 @@
             border-radius: 4px;
             font-family: monospace;
         }
+        .error-box button {
+            margin-top: 12px;
+            padding: 10px 20px;
+            background: var(--emerald);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+        }
         .refresh-hint {
             margin-top: 10px;
             font-size: 12px;
@@ -301,59 +313,66 @@
         const NAMESPACE = "prof-uprav-2026-v2-final";
         const ABACUS_BASE = "https://abacus.jasoncameron.dev";
 
-        const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+        // Автообновление: 0 — выключено
+        const AUTO_REFRESH_MS = 20000;
+        const FETCH_TIMEOUT_MS = 12000;
 
-        // Один запрос с обработкой 404 (счётчик не создан) и повтором при 429
-        async function fetchOne(code) {
-            const url = `${ABACUS_BASE}/get/${NAMESPACE}/${encodeURIComponent(code)}?_=${Date.now()}`;
+        const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
+        // Один запрос: 404 → 0, 429 → пауза и повтор, таймаут через signal
+        async function fetchOne(code, signal) {
+            const url = `${ABACUS_BASE}/get/${NAMESPACE}/${encodeURIComponent(code)}`;
             for (let attempt = 0; attempt < 2; attempt++) {
                 try {
-                    const res = await fetch(url, { cache: 'no-store' });
-
-                    // 404 = счётчик ещё не создан (никто не голосовал за этот шифр)
+                    const res = await fetch(url, { cache: 'no-store', signal });
                     if (res.status === 404) return 0;
-
                     if (res.status === 429) {
-                        // Лимит Abacus: 30 запросов / 10 сек. Ждём и пробуем ещё раз
-                        await sleep(2000);
-                        continue;
+                        if (attempt === 0) { await sleep(1500); continue; }
+                        return 0;
                     }
                     if (!res.ok) return 0;
-
                     const data = await res.json();
                     return Number(data.value) || 0;
-                } catch {
+                } catch (e) {
+                    if (e.name === 'AbortError') return 0;
                     if (attempt === 1) return 0;
-                    await sleep(1000);
+                    await sleep(800);
                 }
             }
             return 0;
         }
 
-        async function loadVotes() {
+        // Все 19 параллельно (19 < лимита Abacus 30/10с).
+        // onPartial вызывается после каждого ответа — для «наполнения» цифр.
+        async function loadVotes(onPartial) {
             const result = {};
-            // Пакетами по 5 с паузой 800 мс между группами (лимит Abacus: 30/10сек)
-            for (let i = 0; i < CODES.length; i += 5) {
-                const group = CODES.slice(i, i + 5);
-                const counts = await Promise.all(group.map(fetchOne));
-                group.forEach((code, j) => { result[code] = counts[j]; });
+            CODES.forEach(c => result[c] = 0);
 
-                if (i + 5 < CODES.length) await sleep(800);
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+
+            try {
+                await Promise.all(CODES.map(async (code) => {
+                    const v = await fetchOne(code, controller.signal);
+                    result[code] = v;
+                    if (onPartial) onPartial({ ...result });
+                }));
+            } finally {
+                clearTimeout(timer);
             }
             return result;
         }
 
-        function render(votes) {
+        // Пересчёт процентов, сортировка, победители
+        function computeModel(votes) {
             const items = CODES.map(code => ({
                 code,
                 count: Number(votes[code]) || 0
             }));
-
             const total = items.reduce((s, i) => s + i.count, 0);
             items.forEach(i => {
                 i.percent = total > 0 ? (i.count / total * 100) : 0;
             });
-
             items.sort((a, b) => {
                 if (b.count !== a.count) return b.count - a.count;
                 return a.code.localeCompare(b.code);
@@ -362,51 +381,80 @@
             let winners = [];
             if (total > 0) {
                 const maxCount = items[0].count;
-                winners = items.filter(i => i.count === maxCount);
+                if (maxCount > 0) {
+                    winners = items.filter(i => i.count === maxCount);
+                }
             }
             const winnerCodes = new Set(winners.map(w => w.code));
             const maxCount = winners.length > 0 ? winners[0].count : 0;
             const maxPercent = total > 0 ? (maxCount / total * 100) : 0;
 
+            return { items, total, winners, winnerCodes, maxCount, maxPercent };
+        }
+
+        // ---------- Рендер ----------
+
+        function renderSkeleton() {
             const content = document.getElementById('content');
             document.getElementById('loading').style.display = 'none';
             content.style.display = 'flex';
 
+            const model = computeModel({});
+            content.innerHTML = buildHtml(model);
+        }
+
+        function renderFull(votes) {
+            const content = document.getElementById('content');
+            document.getElementById('loading').style.display = 'none';
+            content.style.display = 'flex';
+
+            const model = computeModel(votes);
+            content.innerHTML = buildHtml(model);
+            updateNumbers(votes);
+        }
+
+        function buildHtml(model) {
+            const { items, total, winners, winnerCodes, maxCount, maxPercent } = model;
+
             let html = '';
 
+            html += `<div class="winner-block" id="winnerBlock">`;
             if (winners.length > 0) {
                 const codesHtml = winners.map((w, idx) => {
                     const sep = idx < winners.length - 1 ? '<span class="plus">+</span>' : '';
                     return `<span class="winner-code">${w.code}${sep}</span>`;
                 }).join('');
-
                 const label = winners.length === 1
                     ? 'Победитель'
                     : `Победители (${winners.length}) — равное число голосов`;
-
                 html += `
-                    <div class="winner-block">
-                        <div class="cup">🏆</div>
-                        <div class="winner-info">
-                            <div class="winner-label">${label}</div>
-                            <div class="winner-codes">${codesHtml}</div>
-                            <div class="winner-stats">${maxCount} голосов из ${total}</div>
-                        </div>
-                        <div class="winner-percent">
-                            ${maxPercent.toFixed(1)}%
-                            <small>${winners.length === 1 ? 'от всех голосов' : 'у каждого из лидеров'}</small>
-                        </div>
+                    <div class="cup">🏆</div>
+                    <div class="winner-info">
+                        <div class="winner-label">${label}</div>
+                        <div class="winner-codes">${codesHtml}</div>
+                        <div class="winner-stats" id="winnerStats">${maxCount} голосов из ${total}</div>
+                    </div>
+                    <div class="winner-percent" id="winnerPercent">
+                        ${maxPercent.toFixed(1)}%
+                        <small>${winners.length === 1 ? 'от всех голосов' : 'у каждого из лидеров'}</small>
                     </div>
                 `;
             } else {
                 html += `
-                    <div class="error-box">
-                        Пока нет ни одного голоса. Откройте <code>vote.html</code> и проголосуйте.
+                    <div class="cup">🏆</div>
+                    <div class="winner-info">
+                        <div class="winner-label">Победитель</div>
+                        <div class="winner-codes"><span class="winner-code">—</span></div>
+                        <div class="winner-stats" id="winnerStats">Пока нет голосов</div>
+                    </div>
+                    <div class="winner-percent" id="winnerPercent">
+                        0.0%<small>от всех голосов</small>
                     </div>
                 `;
             }
+            html += `</div>`;
 
-            html += '<div class="ranking">';
+            html += '<div class="ranking" id="ranking">';
             items.forEach((item, idx) => {
                 const rank = idx + 1;
                 const isWinner = winnerCodes.has(item.code);
@@ -414,33 +462,153 @@
                 const rowClass = isWinner ? 'rank-row winner-row'
                                : isTop3   ? 'rank-row top3'
                                           : 'rank-row';
-
                 html += `
-                    <div class="${rowClass}">
+                    <div class="${rowClass}" data-code="${item.code}">
                         <div class="rank-num">${rank}</div>
                         <div class="rank-code">${item.code}</div>
                         <div class="rank-bar-wrap">
-                            <div class="rank-bar" style="width:${item.percent}%"></div>
+                            <div class="rank-bar" style="width:0%"></div>
                         </div>
                         <div class="rank-values">
-                            <span class="rank-percent">${item.percent.toFixed(1)}%</span>
-                            <span class="rank-count">${item.count} г.</span>
+                            <span class="rank-percent">0.0%</span>
+                            <span class="rank-count">0 г.</span>
                         </div>
                     </div>
                 `;
             });
             html += '</div>';
-            html += '<div class="refresh-hint">Обновите страницу (F5), чтобы увидеть свежие данные</div>';
+            html += `<div class="refresh-hint">${AUTO_REFRESH_MS > 0
+                ? 'Данные обновляются автоматически каждые ' + (AUTO_REFRESH_MS / 1000) + ' с'
+                : 'Обновите страницу (F5), чтобы увидеть свежие данные'}</div>`;
 
-            content.innerHTML = html;
-            document.getElementById('totalBadge').textContent = `Всего голосов: ${total}`;
+            return html;
         }
 
-        loadVotes().then(render).catch(e => {
-            console.error(e);
-            document.getElementById('loading').textContent = 'Ошибка загрузки данных: ' + e.message;
-        });
+        // Мягкое обновление: меняем только цифры и ширину баров, DOM не пересоздаём
+        function updateNumbers(votes) {
+            const model = computeModel(votes);
+            const { items, total, winners, winnerCodes, maxCount, maxPercent } = model;
+
+            // Бейдж «всего голосов»
+            document.getElementById('totalBadge').textContent = `Всего голосов: ${total}`;
+
+            // Победитель
+            const wb = document.getElementById('winnerBlock');
+            if (wb) {
+                if (winners.length > 0) {
+                    const codesHtml = winners.map((w, idx) => {
+                        const sep = idx < winners.length - 1 ? '<span class="plus">+</span>' : '';
+                        return `<span class="winner-code">${w.code}${sep}</span>`;
+                    }).join('');
+                    const label = winners.length === 1
+                        ? 'Победитель'
+                        : `Победители (${winners.length}) — равное число голосов`;
+                    const wl = wb.querySelector('.winner-label');
+                    const wc = wb.querySelector('.winner-codes');
+                    const ws = wb.querySelector('#winnerStats');
+                    const wp = wb.querySelector('#winnerPercent');
+                    if (wl) wl.textContent = label;
+                    if (wc) wc.innerHTML = codesHtml;
+                    if (ws) ws.textContent = `${maxCount} голосов из ${total}`;
+                    if (wp) wp.innerHTML = `${maxPercent.toFixed(1)}%<small>${winners.length === 1 ? 'от всех голосов' : 'у каждого из лидеров'}</small>`;
+                } else {
+                    const ws = wb.querySelector('#winnerStats');
+                    const wp = wb.querySelector('#winnerPercent');
+                    const wc = wb.querySelector('.winner-codes');
+                    if (wc) wc.innerHTML = `<span class="winner-code">—</span>`;
+                    if (ws) ws.textContent = 'Пока нет голосов';
+                    if (wp) wp.innerHTML = `0.0%<small>от всех голосов</small>`;
+                }
+            }
+
+            // Строки рейтинга
+            const ranking = document.getElementById('ranking');
+            if (!ranking) return;
+
+            // Перестроим порядок строк, если сортировка изменилась
+            const orderChanged = (() => {
+                const current = Array.from(ranking.children).map(el => el.dataset.code);
+                return current.join(',') !== items.map(i => i.code).join(',');
+            })();
+
+            if (orderChanged) {
+                // Пересобираем ranking целиком, но только если порядок реально изменился
+                ranking.innerHTML = items.map((item, idx) => {
+                    const rank = idx + 1;
+                    const isWinner = winnerCodes.has(item.code);
+                    const isTop3 = rank <= 3;
+                    const rowClass = isWinner ? 'rank-row winner-row'
+                                   : isTop3   ? 'rank-row top3'
+                                              : 'rank-row';
+                    return `
+                        <div class="${rowClass}" data-code="${item.code}">
+                            <div class="rank-num">${rank}</div>
+                            <div class="rank-code">${item.code}</div>
+                            <div class="rank-bar-wrap">
+                                <div class="rank-bar" style="width:0%"></div>
+                            </div>
+                            <div class="rank-values">
+                                <span class="rank-percent">0.0%</span>
+                                <span class="rank-count">0 г.</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            // Обновляем цифры и ширину баров
+            items.forEach((item, idx) => {
+                const row = ranking.querySelector(`[data-code="${item.code}"]`);
+                if (!row) return;
+                const rankNum = row.querySelector('.rank-num');
+                const bar = row.querySelector('.rank-bar');
+                const percentEl = row.querySelector('.rank-percent');
+                const countEl = row.querySelector('.rank-count');
+                if (rankNum) rankNum.textContent = idx + 1;
+                if (bar) bar.style.width = item.percent.toFixed(2) + '%';
+                if (percentEl) percentEl.textContent = item.percent.toFixed(1) + '%';
+                if (countEl) countEl.textContent = item.count + ' г.';
+            });
+        }
+
+        // ---------- Управление загрузкой ----------
+
+        let isRefreshing = false;
+
+        async function refresh(isFirst) {
+            if (isRefreshing) return;
+            isRefreshing = true;
+            try {
+                if (isFirst) {
+                    renderSkeleton();
+                }
+                const votes = await loadVotes(isFirst ? (partial) => updateNumbers(partial) : null);
+                updateNumbers(votes);
+            } catch (e) {
+                console.error(e);
+                if (isFirst) {
+                    const content = document.getElementById('content');
+                    document.getElementById('loading').style.display = 'none';
+                    content.style.display = 'flex';
+                    content.innerHTML = `
+                        <div class="error-box">
+                            Не удалось загрузить данные. Проверьте соединение и попробуйте снова.
+                            <br><button onclick="location.reload()">Повторить</button>
+                        </div>
+                    `;
+                }
+            } finally {
+                isRefreshing = false;
+            }
+        }
+
+        // Первая загрузка
+        refresh(true);
+
+        // Автообновление
+        if (AUTO_REFRESH_MS > 0) {
+            setInterval(() => refresh(false), AUTO_REFRESH_MS);
+        }
     </script>
 </body>
 </html>
-    
