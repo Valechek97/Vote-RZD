@@ -7,122 +7,37 @@
     <style>
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body {
-            margin: 0;
-            padding: 16px;
+            margin: 0; padding: 16px;
             font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background: #ffffff;
-            color: #0A2E24;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            background: #ffffff; color: #0A2E24;
+            display: flex; flex-direction: column; align-items: center;
             min-height: 100vh;
         }
-        .logo-wrap {
-            width: 100%;
-            max-width: 400px;
-            display: flex;
-            justify-content: center;
-            margin-bottom: 8px;
-        }
-        .logo-wrap img {
-            max-height: 128px;
-            max-width: 80%;
-            object-fit: contain;
-        }
-        .header {
-            width: 100%;
-            max-width: 400px;
-            text-align: center;
-            margin-bottom: 16px;
-            padding-bottom: 12px;
-            border-bottom: 3px solid #0E7A5F;
-        }
-        .header h1 {
-            font-size: 20px;
-            margin: 0 0 4px 0;
-            color: #0E7A5F;
-            font-weight: 700;
-        }
-        .header p {
-            font-size: 13px;
-            margin: 0;
-            color: #0A5A46;
-        }
-        .grid-container {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            width: 100%;
-            max-width: 400px;
-            margin-bottom: 20px;
-        }
-        .col {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
+        .logo-wrap { width: 100%; max-width: 400px; display: flex; justify-content: center; margin-bottom: 8px; }
+        .logo-wrap img { max-height: 128px; max-width: 80%; object-fit: contain; }
+        .header { width: 100%; max-width: 400px; text-align: center; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 3px solid #0E7A5F; }
+        .header h1 { font-size: 20px; margin: 0 0 4px 0; color: #0E7A5F; font-weight: 700; }
+        .header p { font-size: 13px; margin: 0; color: #0A5A46; }
+        .grid-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; max-width: 400px; margin-bottom: 20px; }
+        .col { display: flex; flex-direction: column; gap: 10px; }
         .vote-btn {
-            background: #F2FAF7;
-            border: 2px solid #B9DED2;
-            border-radius: 10px;
-            padding: 14px 0;
-            font-size: 16px;
-            font-weight: 600;
-            color: #0A2E24;
-            cursor: pointer;
-            transition: all 0.15s;
-            text-align: center;
-            font-family: inherit;
-            width: 100%;
-            user-select: none;
+            background: #F2FAF7; border: 2px solid #B9DED2; border-radius: 10px;
+            padding: 14px 0; font-size: 16px; font-weight: 600; color: #0A2E24;
+            cursor: pointer; transition: all 0.15s; text-align: center;
+            font-family: inherit; width: 100%; user-select: none;
         }
         .vote-btn:active { background: #E0F2EA; }
-        .vote-btn.selected {
-            background: #0E7A5F;
-            border-color: #0E7A5F;
-            color: #ffffff;
-            box-shadow: 0 2px 8px rgba(14, 122, 95, 0.4);
-        }
-        .vote-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-        .submit-area {
-            width: 100%;
-            max-width: 400px;
-            position: sticky;
-            bottom: 16px;
-            background: #fff;
-            padding-top: 10px;
-        }
+        .vote-btn.selected { background: #0E7A5F; border-color: #0E7A5F; color: #ffffff; box-shadow: 0 2px 8px rgba(14, 122, 95, 0.4); }
+        .vote-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .submit-area { width: 100%; max-width: 400px; position: sticky; bottom: 16px; background: #fff; padding-top: 10px; }
         #submitBtn {
-            width: 100%;
-            padding: 16px;
-            background: #0E7A5F;
-            color: #fff;
-            border: none;
-            border-radius: 12px;
-            font-size: 18px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: background 0.2s;
-            font-family: inherit;
+            width: 100%; padding: 16px; background: #0E7A5F; color: #fff;
+            border: none; border-radius: 12px; font-size: 18px; font-weight: 700;
+            cursor: pointer; transition: background 0.2s; font-family: inherit;
         }
-        #submitBtn:disabled {
-            background: #B9DED2;
-            color: #fff;
-            cursor: not-allowed;
-        }
-        #submitBtn:not(:disabled):active {
-            background: #0A5A46;
-        }
-        .footer-note {
-            margin-top: 12px;
-            font-size: 11px;
-            color: #7A968C;
-            text-align: center;
-            max-width: 400px;
-        }
+        #submitBtn:disabled { background: #B9DED2; color: #fff; cursor: not-allowed; }
+        #submitBtn:not(:disabled):active { background: #0A5A46; }
+        .footer-note { margin-top: 12px; font-size: 11px; color: #7A968C; text-align: center; max-width: 400px; }
     </style>
 </head>
 <body>
@@ -145,7 +60,11 @@
     <div class="submit-area">
         <button id="submitBtn" disabled onclick="submitVote()">Проголосовать</button>
     </div>
-    <div class="footer-note">Один голос за сессию браузера. Голос нельзя изменить до перезапуска браузера.</div>
+    <div class="footer-note">Один голос за сессию браузера.</div>
+
+    <!-- Firebase SDK (compat-версия) -->
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 
     <script>
         const CODES = [
@@ -154,11 +73,19 @@
             "U-14","U-15","U-16","U-17","U-18","U-19"
         ];
 
-        // ⚠️ Должен совпадать с results.html
-        const NAMESPACE = "test23112026-v2";
-        const ABACUS_BASE = "https://abacus.jasoncameron.dev";
-        const VOTED_KEY = "prof_uprav_vote_2026";
-        const FETCH_TIMEOUT_MS = 10000;
+        // Твой конфиг Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyBvVhvb9apFU51DHdtYWPGR63ENMMluoBM",
+            authDomain: "prof-uprav-vote.firebaseapp.com",
+            projectId: "prof-uprav-vote",
+            storageBucket: "prof-uprav-vote.firebasestorage.app",
+            messagingSenderId: "263713733786",
+            appId: "1:263713733786:web:ddfb8da85fec1d093a3323"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const VOTED_KEY = "prof_uprav_vote_firebase_2026";
 
         let selectedCode = null;
         let isSending = false;
@@ -177,14 +104,10 @@
             else col3.appendChild(btn);
         });
 
-        if (sessionStorage.getItem(VOTED_KEY)) {
-            lockUI();
-        }
+        if (sessionStorage.getItem(VOTED_KEY)) lockUI();
 
         function lockUI() {
-            document.querySelectorAll('.vote-btn').forEach(b => {
-                b.disabled = true;
-            });
+            document.querySelectorAll('.vote-btn').forEach(b => b.disabled = true);
             const btn = document.getElementById('submitBtn');
             btn.disabled = true;
             btn.textContent = 'Вы уже голосовали';
@@ -202,30 +125,16 @@
             if (!selectedCode || sessionStorage.getItem(VOTED_KEY) || isSending) return;
 
             const btn = document.getElementById('submitBtn');
-            const controller = new AbortController();
-            const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
-
             isSending = true;
             btn.disabled = true;
             btn.textContent = 'Отправка…';
 
             try {
-                const url = `${ABACUS_BASE}/hit/${NAMESPACE}/${encodeURIComponent(selectedCode)}`;
-                const res = await fetch(url, {
-                    cache: 'no-store',
-                    signal: controller.signal
-                });
-
-                if (res.status === 429) {
-                    throw new Error('Слишком много запросов. Подождите 10 секунд и попробуйте снова.');
-                }
-                if (!res.ok) throw new Error('HTTP ' + res.status);
-
-                let data = null;
-                try { data = await res.json(); } catch (_) {}
-                if (!data || typeof data.value === 'undefined') {
-                    throw new Error('Некорректный ответ сервиса');
-                }
+                // Атомарный инкремент в Firestore
+                await db.collection('votes').doc(selectedCode).set(
+                    { count: firebase.firestore.FieldValue.increment(1) },
+                    { merge: true }
+                );
 
                 sessionStorage.setItem(VOTED_KEY, 'true');
 
@@ -238,14 +147,10 @@
                 `;
             } catch (e) {
                 console.error(e);
-                const msg = e.name === 'AbortError'
-                    ? 'Превышено время ожидания. Проверьте соединение и попробуйте ещё раз.'
-                    : e.message;
-                alert('Не удалось отправить голос: ' + msg);
+                alert('Не удалось отправить голос: ' + e.message);
                 btn.disabled = false;
                 btn.textContent = 'Проголосовать';
             } finally {
-                clearTimeout(timer);
                 isSending = false;
             }
         };
