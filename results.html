@@ -128,7 +128,8 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        const AUTO_REFRESH_MS = 20000;
+        // Обновление раз в 10 секунд
+        const AUTO_REFRESH_MS = 10000;
 
         async function loadVotes() {
             const snapshot = await db.collection('votes').get();
